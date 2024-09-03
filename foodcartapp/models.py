@@ -1,5 +1,10 @@
+from enum import unique
+from tabnanny import verbose
+
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models import CharField, ForeignKey, SET_NULL
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class Restaurant(models.Model):
@@ -121,3 +126,27 @@ class RestaurantMenuItem(models.Model):
 
     def __str__(self):
         return f"{self.restaurant.name} - {self.product.name}"
+
+
+class Order(models.Model):
+    firstname = CharField(max_length=25, verbose_name='Имя')
+    lastname = CharField(max_length=25, verbose_name='Фамилия')
+    phonenumber = PhoneNumberField(db_index=True, verbose_name='номер телефона')
+    address = models.TextField(db_index=True, verbose_name='адрес')
+
+
+    class Meta:
+        verbose_name = 'заказ'
+        verbose_name_plural = 'заказы'
+
+    def __str__(self):
+        return f'{self.firstname}, т. {self.phonenumber}'
+
+
+class OrderProduct(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_products')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='order_products')
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+    def __str__(self):
+        return f'{self.quantity} x {self.product.name} in Order {self.order.id}'
