@@ -1,10 +1,17 @@
 import json
+import re
+from typing import List
 
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError
 from django.http import JsonResponse, HttpResponse
 from django.templatetags.static import static
+from pydantic import BaseModel, Field, PositiveInt, constr, ValidationError, ConfigDict, conlist
+
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from .models import Product, Order, OrderProduct
 
@@ -63,10 +70,22 @@ def product_list_api(request):
 
 @api_view(['POST'])
 def register_order(request):
+    class ProductSchema(BaseModel):
+        product: PositiveInt
+        quantity: PositiveInt
+
+    class OrderSchema(BaseModel):
+        products: conlist(item_type=dict, min_length=1) # type: ignore
+        firstname: constr(min_length=1) # type: ignore
+        lastname: constr(min_length=1) # type: ignore
+        phonenumber: str = Field(pattern = r'^(?:\+7[1-9]\d{2}|8\d{2})[-.\s]?\d{3}[-.\s]?\d{2}[-.\s]?\d{2}')
+        address: constr(min_length=1) # type: ignore
+        model_config = ConfigDict(extra="forbid")
     try:
         order = request.data
-        if 'products' not in order or not isinstance(order['products'], list) or not order['products']:
-            raise KeyError('products')
+        OrderSchema(**order)
+        for product in order['products']:
+            ProductSchema(**product)
         new_order = Order.objects.create(firstname=order['firstname'],
                                          lastname=order['lastname'],
                                          phonenumber=order['phonenumber'],
@@ -76,5 +95,11 @@ def register_order(request):
                                         product=Product.objects.get(id=product['product']),
                                         quantity=product['quantity'])
         return Response(status=status.HTTP_201_CREATED, headers={'result': 'Order created'})
-    except KeyError as key_error:
-        return Response(headers={'error': f'Missing key: {key_error} not presented or not list'}, status=status.HTTP_400_BAD_REQUEST)
+    except ValidationError as error:
+        error_messages = error.errors()
+        for error in error_messages:
+            print(error)
+        errors = {error['loc'][0]: error['msg'] for error in error_messages}
+        return Response(status=HTTP_400_BAD_REQUEST, headers={'error': errors})
+    except ObjectDoesNotExist as not_exist_error:
+        return Response(status=HTTP_400_BAD_REQUEST, headers={'error': not_exist_error})

@@ -131,7 +131,7 @@ class RestaurantMenuItem(models.Model):
 class Order(models.Model):
     firstname = CharField(max_length=25, verbose_name='Имя')
     lastname = CharField(max_length=25, verbose_name='Фамилия')
-    phonenumber = PhoneNumberField(db_index=True, verbose_name='номер телефона')
+    phonenumber = PhoneNumberField(db_index=True, verbose_name='номер телефона',  region='RU')
     address = models.TextField(db_index=True, verbose_name='адрес')
 
 
