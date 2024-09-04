@@ -2,6 +2,7 @@ import json
 
 from django.http import JsonResponse, HttpResponse
 from django.templatetags.static import static
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -64,19 +65,16 @@ def product_list_api(request):
 def register_order(request):
     try:
         order = request.data
-        print(1)
+        if 'products' not in order or not isinstance(order['products'], list) or not order['products']:
+            raise KeyError('products')
         new_order = Order.objects.create(firstname=order['firstname'],
-                             lastname=order['lastname'],
-                             phonenumber=order['phonenumber'],
-                             address=order['address'])
+                                         lastname=order['lastname'],
+                                         phonenumber=order['phonenumber'],
+                                         address=order['address'])
         for product in order['products']:
             OrderProduct.objects.create(order=new_order,
                                         product=Product.objects.get(id=product['product']),
                                         quantity=product['quantity'])
-        print(2)
-        return Response(status=200)
-    except ValueError as error:
-        return JsonResponse({
-            'error': f'{error}',
-
-        })
+        return Response(status=status.HTTP_201_CREATED, headers={'result': 'Order created'})
+    except KeyError as key_error:
+        return Response(headers={'error': f'Missing key: {key_error} not presented or not list'}, status=status.HTTP_400_BAD_REQUEST)
