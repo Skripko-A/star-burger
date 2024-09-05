@@ -1,8 +1,10 @@
 from django.http import JsonResponse
 from django.templatetags.static import static
+from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.serializers import CharField, Serializer,ValidationError, ModelSerializer, ListField
 
@@ -68,16 +70,18 @@ class OrderProductSerializer(ModelSerializer):
 
 
 class OrderSerializer(ModelSerializer):
-    products = ListField(child=OrderProductSerializer(), allow_empty=False)
+    products = ListField(child=OrderProductSerializer(), allow_empty=False, write_only=True)
     class Meta:
         model = Order
         fields = ['firstname','lastname', 'phonenumber', 'address', 'products']
 
 
 @api_view(['POST'])
+@csrf_exempt
 def register_order(request):
     serializer = OrderSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+    #serializer.save()
 
     new_order = Order.objects.create(
         firstname=serializer.validated_data['firstname'],
@@ -90,4 +94,5 @@ def register_order(request):
     order_products = [OrderProduct(order=new_order, **fields) for fields in order_products_fields]
     OrderProduct.objects.bulk_create(order_products)
 
-    return Response({'new_order_id': 'new_order_id'})
+    return Response(serializer.data, status=201)
+    #return Response({'new_order_id': new_order.id})
