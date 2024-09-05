@@ -81,7 +81,6 @@ class OrderSerializer(ModelSerializer):
 def register_order(request):
     serializer = OrderSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    #serializer.save()
 
     new_order = Order.objects.create(
         firstname=serializer.validated_data['firstname'],
@@ -95,4 +94,3 @@ def register_order(request):
     OrderProduct.objects.bulk_create(order_products)
 
     return Response(serializer.data, status=201)
-    #return Response({'new_order_id': new_order.id})
