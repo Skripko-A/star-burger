@@ -1,17 +1,10 @@
-import json
-import re
-from typing import List
-
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import IntegrityError
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.templatetags.static import static
-from pydantic import BaseModel, Field, PositiveInt, constr, ValidationError, ConfigDict, conlist
 
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.serializers import CharField, Serializer,ValidationError, ModelSerializer, ListField
 
 from .models import Product, Order, OrderProduct
 
@@ -68,38 +61,33 @@ def product_list_api(request):
     })
 
 
+class OrderProductSerializer(ModelSerializer):
+    class Meta:
+        model = OrderProduct
+        fields = ['product', 'quantity']
+
+
+class OrderSerializer(ModelSerializer):
+    products = ListField(child=OrderProductSerializer(), allow_empty=False)
+    class Meta:
+        model = Order
+        fields = ['firstname','lastname', 'phonenumber', 'address', 'products']
+
+
 @api_view(['POST'])
 def register_order(request):
-    class ProductSchema(BaseModel):
-        product: PositiveInt
-        quantity: PositiveInt
+    serializer = OrderSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
 
-    class OrderSchema(BaseModel):
-        products: conlist(item_type=dict, min_length=1) # type: ignore
-        firstname: constr(min_length=1) # type: ignore
-        lastname: constr(min_length=1) # type: ignore
-        phonenumber: str = Field(pattern = r'^(?:\+7[1-9]\d{2}|8\d{2})[-.\s]?\d{3}[-.\s]?\d{2}[-.\s]?\d{2}')
-        address: constr(min_length=1) # type: ignore
-        model_config = ConfigDict(extra="forbid")
-    try:
-        order = request.data
-        OrderSchema(**order)
-        for product in order['products']:
-            ProductSchema(**product)
-        new_order = Order.objects.create(firstname=order['firstname'],
-                                         lastname=order['lastname'],
-                                         phonenumber=order['phonenumber'],
-                                         address=order['address'])
-        for product in order['products']:
-            OrderProduct.objects.create(order=new_order,
-                                        product=Product.objects.get(id=product['product']),
-                                        quantity=product['quantity'])
-        return Response(status=status.HTTP_201_CREATED, headers={'result': 'Order created'})
-    except ValidationError as error:
-        error_messages = error.errors()
-        for error in error_messages:
-            print(error)
-        errors = {error['loc'][0]: error['msg'] for error in error_messages}
-        return Response(status=HTTP_400_BAD_REQUEST, headers={'error': errors})
-    except ObjectDoesNotExist as not_exist_error:
-        return Response(status=HTTP_400_BAD_REQUEST, headers={'error': not_exist_error})
+    new_order = Order.objects.create(
+        firstname=serializer.validated_data['firstname'],
+        lastname=serializer.validated_data['lastname'],
+        phonenumber=serializer.validated_data['phonenumber'],
+        address=serializer.validated_data['address']
+        )
+    
+    order_products_fields = serializer._validated_data['products']
+    order_products = [OrderProduct(order=new_order, **fields) for fields in order_products_fields]
+    OrderProduct.objects.bulk_create(order_products)
+
+    return Response({'new_order_id': 'new_order_id'})
