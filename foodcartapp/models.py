@@ -144,8 +144,8 @@ class Order(models.Model):
 
 
 class OrderProduct(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_products')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='order_products')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='products')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products')
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
 
     def __str__(self):
