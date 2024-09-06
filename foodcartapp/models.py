@@ -1,8 +1,9 @@
 from enum import unique
 from tabnanny import verbose
 
-from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db import models
+from django.db.models import F
 from django.db.models import CharField, ForeignKey, SET_NULL
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -128,12 +129,20 @@ class RestaurantMenuItem(models.Model):
         return f"{self.restaurant.name} - {self.product.name}"
 
 
+class OrderQuerySet(models.QuerySet):
+    def with_price(self):
+        orders = Order.objects.annotate(
+            total_price = F('products__product__price') * F('products__quantity'))
+        return orders
+    
+
 class Order(models.Model):
     firstname = CharField(max_length=25, verbose_name='Имя')
     lastname = CharField(max_length=25, verbose_name='Фамилия')
     phonenumber = PhoneNumberField(db_index=True, verbose_name='номер телефона',  region='RU')
     address = models.TextField(db_index=True, verbose_name='адрес')
 
+    objects = OrderQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'заказ'
@@ -150,3 +159,4 @@ class OrderProduct(models.Model):
 
     def __str__(self):
         return f'{self.quantity} x {self.product.name} in Order {self.order.id}'
+
