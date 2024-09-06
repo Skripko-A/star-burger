@@ -1,4 +1,5 @@
 from django import forms
+from django.db.models import F
 from django.shortcuts import redirect, render
 from django.views import View
 from django.urls import reverse_lazy
@@ -92,7 +93,6 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    order_items = Order.objects.all()
     return render(request, template_name='order_items.html', context={
-        'order_items': order_items
+        'order_items': Order.objects.with_price()
     })
