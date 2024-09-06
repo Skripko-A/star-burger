@@ -90,7 +90,11 @@ def register_order(request):
         )
     
     order_products_fields = serializer._validated_data['products']
-    order_products = [OrderProduct(order=new_order, **fields) for fields in order_products_fields]
+    order_products = [OrderProduct(order=new_order, 
+                                   price=fields['product'].price * fields['quantity'], 
+                                   **fields) 
+                                   for fields in order_products_fields]
     OrderProduct.objects.bulk_create(order_products)
+    
 
     return Response(serializer.data, status=201)
