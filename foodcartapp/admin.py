@@ -112,3 +112,6 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ('firstname', 'lastname', 'phonenumber', 'address')
     inlines = (OrderProductInline,)
 
+@admin.register(OrderProduct)
+class OrderProductAdmin(admin.ModelAdmin):
+    pass
