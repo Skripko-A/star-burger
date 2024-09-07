@@ -204,7 +204,7 @@ class Order(models.Model):
         blank=True,
     )
     
-    payment_tupe = models.CharField(
+    payment_type = models.CharField(
         verbose_name='Способ оплаты',
         max_length=2,
         db_index=True,
