@@ -144,6 +144,11 @@ class OrderStatusChoice(models.TextChoices):
     ARCHIVE = u'A', 'Архив'
     
 
+class OrderPaymentType(models.TextChoices):
+    ONLINE = u'O', 'Онлайн'
+    TERMINAL = u'T', 'Картой курьеру'
+    CASH = u'C', 'Наличными курьеру'
+
 class Order(models.Model):
     firstname = CharField(
         max_length=25,
@@ -199,6 +204,13 @@ class Order(models.Model):
         blank=True,
     )
     
+    payment_tupe = models.CharField(
+        verbose_name='Способ оплаты',
+        max_length=2,
+        db_index=True,
+        choices=OrderPaymentType.choices,
+    )
+
     objects = OrderQuerySet.as_manager()
 
     class Meta:
