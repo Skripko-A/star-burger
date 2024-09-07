@@ -171,6 +171,12 @@ class Order(models.Model):
         default=OrderStatusChoice.MANAGER,
         db_index=True,
     )
+
+    comment = models.TextField(
+        verbose_name='Комментарий к заказу',
+        null=True,
+        blank=True
+    )
     
     objects = OrderQuerySet.as_manager()
 
