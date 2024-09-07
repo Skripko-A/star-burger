@@ -136,12 +136,42 @@ class OrderQuerySet(models.QuerySet):
         return orders
     
 
-class Order(models.Model):
-    firstname = CharField(max_length=25, verbose_name='Имя')
-    lastname = CharField(max_length=25, verbose_name='Фамилия')
-    phonenumber = PhoneNumberField(db_index=True, verbose_name='номер телефона',  region='RU')
-    address = models.TextField(db_index=True, verbose_name='адрес')
+class OrderStatusChoice(models.TextChoices):
+    MANAGER = u'M', 'Менеджер'
+    PICKER = u'P', 'Сборщик'
+    COURIER = u'C', 'Курьер'
+    ARCHIVE = u'A', 'Архив'
+    
 
+class Order(models.Model):
+    firstname = CharField(
+        max_length=25,
+        verbose_name='Имя'
+        )
+    
+    lastname = CharField(
+        max_length=25,
+        verbose_name='Фамилия'
+        )
+    
+    phonenumber = PhoneNumberField(
+        db_index=True,
+        verbose_name='номер телефона',
+        region='RU')
+    
+    address = models.TextField(
+        db_index=True,
+        verbose_name='адрес'
+        )
+    
+    status = models.CharField(
+        verbose_name='Статус',
+        max_length=2,
+        choices=OrderStatusChoice.choices,
+        default=OrderStatusChoice.MANAGER,
+        db_index=True,
+    )
+    
     objects = OrderQuerySet.as_manager()
 
     class Meta:
@@ -153,11 +183,30 @@ class Order(models.Model):
 
 
 class OrderProduct(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='products')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products')
-    quantity = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
-    price = models.DecimalField('цена',max_digits=8,decimal_places=2, validators=[MinValueValidator(0)])
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='products'
+        )
+    
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='products'
+        )
+    
+    quantity = models.PositiveIntegerField(
+        validators=[MinValueValidator(0),
+                    MaxValueValidator(100)]
+                    )
+    
+    price = models.DecimalField(
+        verbose_name='цена',
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(0)]
+        )
+
 
     def __str__(self):
         return f'{self.quantity} x {self.product.name} x {self.price} in Order {self.order.id}'
-

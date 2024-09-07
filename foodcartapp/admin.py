@@ -109,11 +109,12 @@ class ProductAdmin(admin.ModelAdmin):
 
 class OrderProductInline(admin.TabularInline):
     model = OrderProduct
+    extra = 0
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('firstname', 'lastname', 'phonenumber', 'address')
+    list_display = ( 'firstname', 'lastname', 'phonenumber', 'address')
     inlines = (OrderProductInline,)
 
     def response_post_save_change(self, request, obj):
