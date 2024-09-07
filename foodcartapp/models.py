@@ -5,6 +5,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import F
 from django.db.models import CharField, ForeignKey, SET_NULL
+from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -176,6 +177,26 @@ class Order(models.Model):
         verbose_name='Комментарий к заказу',
         null=True,
         blank=True
+    )
+
+    created_at = models.DateTimeField(
+        verbose_name='Время создания заказа',
+        default=timezone.now,
+        db_index=True,
+        )
+
+    called_at = models.DateTimeField(
+        verbose_name='Время звонка менеджера',
+        db_index=True,
+        null=True,
+        blank=True,
+        )
+
+    delivered_at = models.DateTimeField(
+        verbose_name='Время доставки заказа',
+        db_index=True,
+        null=True,
+        blank=True,
     )
     
     objects = OrderQuerySet.as_manager()
