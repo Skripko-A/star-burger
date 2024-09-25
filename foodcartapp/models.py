@@ -136,7 +136,6 @@ class OrderQuerySet(models.QuerySet):
             total_price = F('products__price'))
         return orders
     
-
 class OrderStatusChoice(models.TextChoices):
     MANAGER = u'M', 'Менеджер'
     PICKER = u'P', 'Сборщик'
