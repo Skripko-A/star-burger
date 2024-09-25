@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.http import JsonResponse
 from django.templatetags.static import static
 from django.views.decorators.csrf import csrf_exempt
@@ -77,10 +77,19 @@ class OrderSerializer(ModelSerializer):
         fields = ['firstname','lastname', 'phonenumber', 'address', 'products']
 
 
+
 @api_view(['POST'])
 @csrf_exempt
 @transaction.atomic
 def register_order(request):
+    '''
+    Данные для тестирования:
+    {"products": [{"product": 1, "quantity": 1}], 
+    "firstname": "Василий", 
+    "lastname": "Васильевич", 
+    "phonenumber": "+79123456789", 
+    "address": "Лондон"}
+    '''
     serializer = OrderSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -90,13 +99,19 @@ def register_order(request):
         phonenumber=serializer.validated_data['phonenumber'],
         address=serializer.validated_data['address']
         )
-    
+    print(f'order {new_order} created')
     order_products_fields = serializer._validated_data['products']
-    order_products = [OrderProduct(order=new_order, 
+    order_products = [OrderProduct(order=Order.objects.last(), 
                                    price=fields['product'].price * fields['quantity'], 
                                    **fields) 
                                    for fields in order_products_fields]
-    OrderProduct.objects.bulk_create(order_products)
+    print('before bulk create')
+    try:
+        OrderProduct.objects.bulk_create(order_products)
+        print('after_bulk_create')
+    except IntegrityError as e:
+        print(f'Error during bulk_create: {e}')
+        return Response({'error': 'Error creating order products'}, status=400)
     
 
     return Response(serializer.data, status=201)
