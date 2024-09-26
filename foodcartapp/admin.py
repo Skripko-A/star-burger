@@ -21,6 +21,8 @@ class RestaurantAdmin(admin.ModelAdmin):
         'name',
         'address',
         'contact_phone',
+        'menu_items__product__name'
+        
     ]
     list_display = [
         'name',
