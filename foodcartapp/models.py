@@ -3,7 +3,7 @@ from tabnanny import verbose
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.db.models import F
+from django.db.models import F, Q, Sum, Count
 from django.db.models import CharField, ForeignKey, SET_NULL
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
@@ -133,9 +133,11 @@ class RestaurantMenuItem(models.Model):
 class OrderQuerySet(models.QuerySet):
     def with_price(self):
         orders = Order.objects.annotate(
-            total_price = F('products__price'))
+            total_price = Sum(F('products__price') * F('products__quantity'))
+        )
         return orders
     
+
 class OrderStatusChoice(models.TextChoices):
     MANAGER = u'M', 'Менеджер'
     PICKER = u'P', 'Сборщик'
@@ -147,6 +149,7 @@ class OrderPaymentType(models.TextChoices):
     ONLINE = u'O', 'Онлайн'
     TERMINAL = u'T', 'Картой курьеру'
     CASH = u'C', 'Наличными курьеру'
+
 
 class Order(models.Model):
     firstname = CharField(
@@ -216,6 +219,19 @@ class Order(models.Model):
         verbose_name = 'заказ'
         verbose_name_plural = 'заказы'
 
+    def get_restaurants(self):
+        product_ids = []
+        for order_product in self.products.all():
+            product_ids.append(order_product.product.id)
+        required_count = len(product_ids)
+
+        restaurants = Restaurant.objects.annotate(
+            product_count=Count(
+                'menu_items__product', filter=Q(menu_items__product__id__in=product_ids)
+                )
+            ).filter(product_count=required_count)
+        return restaurants
+    
     def __str__(self):
         return f'{self.firstname}, т. {self.phonenumber}'
 
@@ -244,7 +260,6 @@ class OrderProduct(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(0)]
         )
-
 
     def __str__(self):
         return f'{self.quantity} x {self.product.name} x {self.price} in Order {self.order.id}'
