@@ -37,6 +37,10 @@
          <td>{{ item.comment }}</td>
          <td>
           <details>
+            {% if item.restaurant %}
+            <summary style="cursor: pointer;">Ресторан</summary>
+              <div>{{ item.restaurant.name }}</div>
+            {% else %}
             <summary style="cursor: pointer;">Рестораны, которые могут приготовить заказ</summary>
               <div>
                 {% for restaurant in item.get_restaurants %}
@@ -45,6 +49,7 @@
                   Нет доступных ресторанов
                 {% endfor %}
               </div>
+            {% endif %}
           </details>
         </td>
          <td><a href="{% url 'admin:foodcartapp_order_change' object_id=item.id %}?next={{ request.get_full_path|urlencode }}">Редактировать</a></td>
