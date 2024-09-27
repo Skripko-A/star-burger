@@ -93,7 +93,15 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    order_items = Order.objects.with_price().exclude(status='A').order_by('status')
+    order_items = Order.objects.with_price().exclude(
+        status='A'
+        ).order_by(
+            'status'
+            ).prefetch_related(
+                'products__product'
+                ).prefetch_related(
+                    'restaurant'
+                    )
     return render(
         request, 
         template_name='order_items.html', 
