@@ -213,6 +213,15 @@ class Order(models.Model):
         choices=OrderPaymentType.choices,
     )
 
+    restaurant = ForeignKey(
+        Restaurant,
+        related_name='orders',
+        verbose_name='Ресторан',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
     objects = OrderQuerySet.as_manager()
 
     class Meta:
