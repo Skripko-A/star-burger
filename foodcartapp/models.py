@@ -3,10 +3,11 @@ from tabnanny import verbose
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.db.models import F, Q, Sum, Count
-from django.db.models import CharField, ForeignKey, SET_NULL
+from django.db.models import F, Q, Sum, Count, CharField, ForeignKey, SET_NULL
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
+
+from geo_functions import fetch_coordinates, get_order_restaurant_distance
 
 
 class Restaurant(models.Model):
@@ -233,12 +234,14 @@ class Order(models.Model):
         for order_product in self.products.all():
             product_ids.append(order_product.product.id)
         required_count = len(product_ids)
-
+        
         restaurants = Restaurant.objects.annotate(
             product_count=Count(
                 'menu_items__product', filter=Q(menu_items__product__id__in=product_ids)
                 )
             ).filter(product_count=required_count)
+        for restaurant in restaurants:
+            restaurant.distance = get_order_restaurant_distance(self, restaurant.address)
         return restaurants
     
     def __str__(self):
