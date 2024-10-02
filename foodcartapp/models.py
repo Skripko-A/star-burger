@@ -240,9 +240,12 @@ class Order(models.Model):
                 'menu_items__product', filter=Q(menu_items__product__id__in=product_ids)
                 )
             ).filter(product_count=required_count)
+        restaurants_list = []
         for restaurant in restaurants:
             restaurant.distance = get_order_restaurant_distance(self, restaurant.address)
-        return restaurants
+            restaurants_list.append(restaurant)
+            restaurants_list.sort(key=lambda x: x.distance)
+        return restaurants_list
     
     def __str__(self):
         return f'{self.firstname}, т. {self.phonenumber}'
