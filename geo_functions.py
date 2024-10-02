@@ -1,10 +1,19 @@
+import os
+
 from geopy import distance
 import requests
 
 
+from environs import Env
+
+
+env = Env()
+env.read_env()
+
+
 def fetch_coordinates(address):
-    #apikey = os.getenv('YANDEX_GEOCODER_API_KEY')
-    apikey = 'd9c66e4b-6109-49a0-b8eb-b1ca46f938ab'
+    apikey = env('YANDEX_GEOCODER_API_KEY')
+    #apikey = 'd9c66e4b-6109-49a0-b8eb-b1ca46f938ab'
     base_url = "https://geocode-maps.yandex.ru/1.x"
     response = requests.get(base_url, params={
         "geocode": f"Moscow {address}",
