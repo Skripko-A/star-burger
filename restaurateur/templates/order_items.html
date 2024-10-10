@@ -25,36 +25,36 @@
        <th>Ссылка на админку</th>
      </tr>
  
-     {% for item in order_items %}
-       <tr>
-         <td>{{ item.id }}</td>
-         <td>{{ item.get_status_display }}</td>
-         <td>{{ item.get_payment_type_display }}</td>
-         <td>{{ item.total_price }} руб.</td>
-         <td>{{ item.firstname }} {{ item.lastname }}</td>
-         <td>{{ item.phonenumber }}</td>
-         <td>{{ item.address }}</td>
-         <td>{{ item.comment }}</td>
-         <td>
-          <details>
-            {% if item.restaurant %}
-            <summary style="cursor: pointer;">Ресторан</summary>
-              <div>{{ item.restaurant.name }}</div>
-            {% else %}
-            <summary style="cursor: pointer;">Рестораны, которые могут приготовить заказ</summary>
-              <div>
-                {% for restaurant in item.get_restaurants %}
-                  {{ restaurant}}: {{restaurant.distance}}
-                {% empty %}
-                  Нет доступных ресторанов
-                {% endfor %}
-              </div>
-            {% endif %}
-          </details>
-        </td>
-         <td><a href="{% url 'admin:foodcartapp_order_change' object_id=item.id %}?next={{ request.get_full_path|urlencode }}">Редактировать</a></td>
-       </tr>
-     {% endfor %}
+     {% for order, restaurants in orders_with_restaurants.items %}
+     <tr>
+      <td>{{ order.id }}</td>
+      <td>{{ order.get_status_display }}</td>
+      <td>{{ order.get_payment_type_display }}</td>
+      <td>{{ order.total_price }} руб.</td>
+      <td>{{ order.firstname }} {{ order.lastname }}</td>
+      <td>{{ order.phonenumber }}</td>
+      <td>{{ order.address }}</td>
+      <td>{{ order.comment }}</td>
+      <td>
+       <details>
+           {% if order.restaurant %}
+               <summary style="cursor: pointer;">Ресторан</summary>
+               <div>{{ order.restaurant.name }}</div>
+           {% else %}
+               <summary style="cursor: pointer;">Рестораны, которые могут приготовить заказ</summary>
+               <div>
+                   {% for restaurant in restaurants %}
+                       {{ restaurant.name }} {{ restaurant.distance }}<br>
+                   {% empty %}
+                       Нет доступных ресторанов
+                   {% endfor %}
+               </div>
+           {% endif %}
+       </details>
+         </td>
+         <td><a href="{% url 'admin:foodcartapp_order_change' object_id=order.id %}?next={{ request.get_full_path|urlencode }}">Редактировать</a></td>
+     </tr>
+    {% endfor %}
     </table>
  </div>
 {% endblock %}
