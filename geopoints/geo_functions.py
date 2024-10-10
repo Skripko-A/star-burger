@@ -1,11 +1,11 @@
 import logging
-import os
 
+from environs import Env
 from geopy import distance
 import requests
 
+from geopoints.models import GeoPoint
 
-from environs import Env
 
 
 logging.basicConfig(
@@ -70,6 +70,26 @@ def find_nearest_restaurant(order):
 
 
 def get_order_restaurant_distance(order, restaurant_address):
-    order_coordinates = fetch_coordinates(order.address)
-    restaurant_coordinates = fetch_coordinates(restaurant_address)
-    return f'{distance.distance(order_coordinates, restaurant_coordinates).km:.3f} км'
+    order_geopoint, created = GeoPoint.objects.get_or_create(
+        address = order.address,
+    )
+    if created:   
+        order_coordinates = fetch_coordinates(order.address)
+        order_geopoint.lng = order_coordinates[0]
+        order_geopoint.lat = order_coordinates[1]
+        order_geopoint.save()
+
+    restaurant_geopoint, created = GeoPoint.objects.get_or_create(
+        address = restaurant_address,
+    )
+    if created:   
+        restaurant_coordinates = fetch_coordinates(restaurant_address)
+        restaurant_geopoint.lng = restaurant_coordinates[0]
+        restaurant_geopoint.lat = restaurant_coordinates[1]
+        restaurant_geopoint.save()
+
+    order_restaurant_distance = distance.distance(
+        (order_geopoint.lng, order_geopoint.lat),
+        (restaurant_geopoint.lng, restaurant_geopoint.lat)
+    )
+    return f'{order_restaurant_distance.km:.3f} км'

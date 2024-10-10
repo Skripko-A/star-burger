@@ -7,7 +7,7 @@ from django.db.models import F, Q, Sum, Count, CharField, ForeignKey, SET_NULL
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 
-from geo_functions import fetch_coordinates, get_order_restaurant_distance
+from geopoints.geo_functions import get_order_restaurant_distance
 
 
 class Restaurant(models.Model):
@@ -232,14 +232,15 @@ class Order(models.Model):
     def get_restaurants(self):
         product_ids = []
         for order_product in self.products.all():
-            product_ids.append(order_product.product.id)
+             product_ids.append(order_product.product.id)
+
         required_count = len(product_ids)
-        
         restaurants = Restaurant.objects.annotate(
             product_count=Count(
                 'menu_items__product', filter=Q(menu_items__product__id__in=product_ids)
                 )
             ).filter(product_count=required_count)
+        
         restaurants_list = []
         for restaurant in restaurants:
             restaurant.distance = get_order_restaurant_distance(self, restaurant.address)

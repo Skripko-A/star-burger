@@ -1,12 +1,16 @@
 from django import forms
+from django.contrib.auth.decorators import user_passes_test
+from django.db.models import Count, Q
+from django.contrib.auth import authenticate, login, views as auth_views
+from django.urls import reverse_lazy
 from django.shortcuts import redirect, render
 from django.views import View
-from django.urls import reverse_lazy
-from django.contrib.auth.decorators import user_passes_test
-from django.contrib.auth import authenticate, login, views as auth_views
+
+
 
 from foodcartapp.models import Product, Restaurant, Order
-
+from geopoints.models import GeoPoint
+from geopoints.geo_functions import get_order_restaurant_distance
 
 class Login(forms.Form):
     username = forms.CharField(
@@ -89,18 +93,38 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    order_items = Order.objects.with_price().exclude(
-        status='A'
-        ).order_by(
-            'status'
-            ).prefetch_related(
-                'products__product'
-                ).select_related(
-                    'restaurant'
-                )
+    order_items = Order.objects.with_price().exclude(status='A').order_by('status').prefetch_related('products__product')
+
+    geopoints = GeoPoint.objects.filter(address__in=order_items.values_list('address'))
     
+
+    orders_with_restaurants = {}
+
+    for order in order_items:
+        geopoints.get(address=order.address)
+        order_product_ids = []
+        for order_product in order.products.all():
+             order_product_ids.append(order_product.product.id)
+
+        required_count = len(order_product_ids)
+        order_restaurants = Restaurant.objects.annotate(
+            product_count=Count(
+                'menu_items__product', filter=Q(menu_items__product__id__in=order_product_ids)
+                )
+            ).filter(product_count=required_count)
+        restaurants_list = []
+        for restaurant in order_restaurants:
+            restaurant.distance = get_order_restaurant_distance(order, restaurant.address)
+            restaurants_list.append(restaurant)
+            restaurants_list.sort(key=lambda x: x.distance)
+        
+        orders_with_restaurants[order] = restaurants_list
+
+
     return render(
         request, 
         template_name='order_items.html', 
-        context={'order_items': order_items,}
-        )
+        context={
+            'orders_with_restaurants': orders_with_restaurants
+        }
+    )
