@@ -94,27 +94,36 @@ def view_restaurants(request):
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
     order_items = Order.objects.with_price().exclude(status='A').order_by('status').prefetch_related('products__product')
-
-    geopoints = GeoPoint.objects.filter(address__in=order_items.values_list('address'))
     
+    restaurants = Restaurant.objects.all()
+
+    geopoints = {geopoint.address: geopoint for geopoint in GeoPoint.objects.filter(
+        Q(
+            address__in=order_items.values_list('address')
+            )
+             | 
+        Q(
+            address__in=restaurants.values_list('address')
+            ))}
 
     orders_with_restaurants = {}
 
     for order in order_items:
-        geopoints.get(address=order.address)
         order_product_ids = []
         for order_product in order.products.all():
              order_product_ids.append(order_product.product.id)
 
         required_count = len(order_product_ids)
-        order_restaurants = Restaurant.objects.annotate(
+
+        order_restaurants = restaurants.annotate(
             product_count=Count(
                 'menu_items__product', filter=Q(menu_items__product__id__in=order_product_ids)
                 )
             ).filter(product_count=required_count)
+        
         restaurants_list = []
         for restaurant in order_restaurants:
-            restaurant.distance = get_order_restaurant_distance(order, restaurant.address)
+            restaurant.distance = get_order_restaurant_distance(order, restaurant, geopoints)
             restaurants_list.append(restaurant)
             restaurants_list.sort(key=lambda x: x.distance)
         

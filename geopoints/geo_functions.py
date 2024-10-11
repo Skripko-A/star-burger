@@ -69,23 +69,25 @@ def find_nearest_restaurant(order):
     return restaurants_and_distances[min_distance]
 
 
-def get_order_restaurant_distance(order, restaurant_address):
-    order_geopoint, created = GeoPoint.objects.get_or_create(
-        address = order.address,
-    )
-    if created:   
+def get_order_restaurant_distance(order, restaurant, geopoints):
+    order_geopoint = geopoints.get(order.address)
+    if not order_geopoint:
         order_coordinates = fetch_coordinates(order.address)
-        order_geopoint.lng = order_coordinates[0]
-        order_geopoint.lat = order_coordinates[1]
+        order_geopoint = GeoPoint.objects.create(
+            lng = order_coordinates[0],
+            lat = order_coordinates[1],
+            address = order.address,
+        )
         order_geopoint.save()
 
-    restaurant_geopoint, created = GeoPoint.objects.get_or_create(
-        address = restaurant_address,
-    )
-    if created:   
-        restaurant_coordinates = fetch_coordinates(restaurant_address)
-        restaurant_geopoint.lng = restaurant_coordinates[0]
-        restaurant_geopoint.lat = restaurant_coordinates[1]
+    restaurant_geopoint = geopoints.get(restaurant.address)
+    if restaurant_geopoint is None:
+        restaurant_coordinates = fetch_coordinates(restaurant.address)
+        restaurant_geopoint = GeoPoint.objects.create(
+            lng = restaurant_coordinates[0],
+            lat = restaurant_coordinates[1],
+            address = restaurant.address,
+        )
         restaurant_geopoint.save()
 
     order_restaurant_distance = distance.distance(
