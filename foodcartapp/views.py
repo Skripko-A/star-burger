@@ -99,16 +99,14 @@ def register_order(request):
         phonenumber=serializer.validated_data['phonenumber'],
         address=serializer.validated_data['address']
         )
-    print(f'order {new_order} created')
+
     order_products_fields = serializer._validated_data['products']
     order_products = [OrderProduct(order=Order.objects.last(), 
                                    price=fields['product'].price * fields['quantity'], 
                                    **fields) 
                                    for fields in order_products_fields]
-    print('before bulk create')
     try:
         OrderProduct.objects.bulk_create(order_products)
-        print('after_bulk_create')
     except IntegrityError as e:
         print(f'Error during bulk_create: {e}')
         return Response({'error': 'Error creating order products'}, status=400)
