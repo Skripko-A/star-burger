@@ -142,3 +142,5 @@ dmypy.json
 cython_debug/
 
 .parcel-cache/
+star-burger-products-master/products.json
+star-burger-products-master/restaurants.json
