@@ -188,7 +188,7 @@ class Order(models.Model):
 
     created_at = models.DateTimeField(
         verbose_name='Время создания заказа',
-        default=timezone.now,
+        auto_now_add=True,
         db_index=True,
         )
 
