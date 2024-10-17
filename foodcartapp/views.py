@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from .models import Product, Order, OrderProduct
-from .serializers import OrderSerializer
+from .serializers import OrderSerializer, OrderProductSerializer
 
 
 def banners_list_api(request):
@@ -74,21 +74,32 @@ def register_order(request):
     "phonenumber": "+79123456789", 
     "address": "Лондон"}
     '''
-    serializer = OrderSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-
+    order_serializer = OrderSerializer(data=request.data)
+    order_serializer.is_valid(raise_exception=True)
     new_order = Order.objects.create(
-        firstname=serializer.validated_data['firstname'],
-        lastname=serializer.validated_data['lastname'],
-        phonenumber=serializer.validated_data['phonenumber'],
-        address=serializer.validated_data['address']
+        firstname=order_serializer.validated_data['firstname'],
+        lastname=order_serializer.validated_data['lastname'],
+        phonenumber=order_serializer.validated_data['phonenumber'],
+        address=order_serializer.validated_data['address']
         )
+    
+    order_products_fields = request.data['products']
+    order_products = []
 
-    order_products_fields = serializer._validated_data['products']
-    order_products = [OrderProduct(order=Order.objects.last(), 
-                                   price=fields['product'].price * fields['quantity'], 
-                                   **fields) 
-                                   for fields in order_products_fields]
+    for fields in order_products_fields:
+        order_product_serializer = OrderProductSerializer(data=fields)
+        order_product_serializer.is_valid(raise_exception=True)
+        product = order_product_serializer.validated_data['product']
+        quantity = order_product_serializer.validated_data['quantity']
+        price = product.price * quantity
+        order_product = OrderProduct(
+            order=new_order,
+            price=price,
+            product=product,
+            quantity=quantity
+        )
+        order_products.append(order_product)
+
     try:
         OrderProduct.objects.bulk_create(order_products)
     except IntegrityError as e:
@@ -96,4 +107,4 @@ def register_order(request):
         return Response({'error': 'Error creating order products'}, status=400)
     
 
-    return Response(serializer.data, status=201)
+    return Response(order_serializer.data, status=201)
