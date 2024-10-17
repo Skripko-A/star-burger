@@ -76,34 +76,11 @@ def register_order(request):
     '''
     order_serializer = OrderSerializer(data=request.data)
     order_serializer.is_valid(raise_exception=True)
-    new_order = Order.objects.create(
-        firstname=order_serializer.validated_data['firstname'],
-        lastname=order_serializer.validated_data['lastname'],
-        phonenumber=order_serializer.validated_data['phonenumber'],
-        address=order_serializer.validated_data['address']
-        )
-    
-    order_products_fields = request.data['products']
-    order_products = []
-
-    for fields in order_products_fields:
-        order_product_serializer = OrderProductSerializer(data=fields)
-        order_product_serializer.is_valid(raise_exception=True)
-        product = order_product_serializer.validated_data['product']
-        quantity = order_product_serializer.validated_data['quantity']
-        price = product.price * quantity
-        order_product = OrderProduct(
-            order=new_order,
-            price=price,
-            product=product,
-            quantity=quantity
-        )
-        order_products.append(order_product)
 
     try:
-        OrderProduct.objects.bulk_create(order_products)
+        order_serializer.save()
     except IntegrityError as e:
-        print(f'Error during bulk_create: {e}')
+        print(f'Error during order create: {e}')
         return Response({'error': 'Error creating order products'}, status=400)
     
 
