@@ -3,13 +3,11 @@ from django.http import JsonResponse
 from django.templatetags.static import static
 from django.views.decorators.csrf import csrf_exempt
 
-from rest_framework import status
 from rest_framework.decorators import api_view
-from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
-from rest_framework.serializers import CharField, Serializer,ValidationError, ModelSerializer, ListField
 
 from .models import Product, Order, OrderProduct
+from .serializers import OrderSerializer
 
 
 def banners_list_api(request):
@@ -62,20 +60,6 @@ def product_list_api(request):
         'ensure_ascii': False,
         'indent': 4,
     })
-
-
-class OrderProductSerializer(ModelSerializer):
-    class Meta:
-        model = OrderProduct
-        fields = ['product', 'quantity']
-
-
-class OrderSerializer(ModelSerializer):
-    products = ListField(child=OrderProductSerializer(), allow_empty=False, write_only=True)
-    class Meta:
-        model = Order
-        fields = ['firstname','lastname', 'phonenumber', 'address', 'products']
-
 
 
 @api_view(['POST'])
