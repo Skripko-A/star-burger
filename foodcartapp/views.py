@@ -76,9 +76,15 @@ def register_order(request):
     '''
     order_serializer = OrderSerializer(data=request.data)
     order_serializer.is_valid(raise_exception=True)
+    new_order = order_serializer.save()
 
+    products_from_request = request.data['products']
+    for product_data in products_from_request:
+        order_product_serializer = OrderProductSerializer(data=product_data)
+        order_product_serializer.is_valid()
+        order_product_serializer.validated_data['new_order'] = new_order
     try:
-        order_serializer.save()
+        order_product_serializer.save()
     except IntegrityError as e:
         print(f'Error during order create: {e}')
         return Response({'error': 'Error creating order products'}, status=400)
