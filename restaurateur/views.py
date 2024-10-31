@@ -8,7 +8,7 @@ from django.views import View
 
 
 
-from foodcartapp.models import Product, Restaurant, Order
+from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem
 from geopoints.models import GeoPoint
 from geopoints.geo_functions import get_order_restaurant_distance
 
@@ -93,47 +93,14 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    order_items = Order.objects.with_price().exclude(status='A').order_by('status').prefetch_related('products__product')
-    
-    restaurants = Restaurant.objects.all()
-
-    geopoints = {geopoint.address: geopoint for geopoint in GeoPoint.objects.filter(
-        Q(
-            address__in=order_items.values_list('address')
-            )
-             | 
-        Q(
-            address__in=restaurants.values_list('address')
-            ))}
-
-    orders_with_restaurants = {}
-
-    for order in order_items:
-        order_product_ids = []
-        for order_product in order.products.all():
-             order_product_ids.append(order_product.product.id)
-
-        required_count = len(order_product_ids)
-
-        order_restaurants = restaurants.annotate(
-            product_count=Count(
-                'menu_items__product', filter=Q(menu_items__product__id__in=order_product_ids)
-                )
-            ).filter(product_count=required_count)
-        
-        restaurants_list = []
-        for restaurant in order_restaurants:
-            restaurant.distance = get_order_restaurant_distance(order, restaurant, geopoints)
-            restaurants_list.append(restaurant)
-            restaurants_list.sort(key=lambda x: x.distance)
-        
-        orders_with_restaurants[order] = restaurants_list
-
+    order_items = Order.objects.prefetch_related(
+        'products__product', 'restaurants'
+        ).with_price().exclude(status='A').order_by('status')
 
     return render(
         request, 
         template_name='order_items.html', 
         context={
-            'orders_with_restaurants': orders_with_restaurants
+            'order_items': order_items
         }
     )

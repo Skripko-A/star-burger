@@ -1,13 +1,8 @@
-from enum import unique
-from tabnanny import verbose
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.db.models import F, Q, Sum, Count, CharField, ForeignKey, SET_NULL
-from django.utils import timezone
+from django.db.models import F, Sum, CharField, ForeignKey
 from phonenumber_field.modelfields import PhoneNumberField
-
-from geopoints.geo_functions import get_order_restaurant_distance
 
 
 class Restaurant(models.Model):
@@ -133,11 +128,11 @@ class RestaurantMenuItem(models.Model):
 
 class OrderQuerySet(models.QuerySet):
     def with_price(self):
-        orders = Order.objects.annotate(
-            total_price = Sum(F('products__price') * F('products__quantity'))
+        orders = self.prefetch_related('products').annotate(
+            total_price=Sum(F('products__price') * F('products__quantity'))
         )
         return orders
-    
+
 
 class OrderStatusChoice(models.TextChoices):
     MANAGER = u'M', 'Менеджер'
@@ -222,30 +217,19 @@ class Order(models.Model):
         blank=True
     )
 
+    restaurants = models.ManyToManyField(
+        Restaurant,
+        verbose_name='Рестораны', 
+        related_name='ready_in_restaurants'
+        )
+
     objects = OrderQuerySet.as_manager()
+
+
 
     class Meta:
         verbose_name = 'заказ'
-        verbose_name_plural = 'заказы'
-
-    def get_restaurants(self):
-        product_ids = []
-        for order_product in self.products.all():
-             product_ids.append(order_product.product.id)
-
-        required_count = len(product_ids)
-        restaurants = Restaurant.objects.annotate(
-            product_count=Count(
-                'menu_items__product', filter=Q(menu_items__product__id__in=product_ids)
-                )
-            ).filter(product_count=required_count)
-        
-        restaurants_list = []
-        for restaurant in restaurants:
-            restaurant.distance = get_order_restaurant_distance(self, restaurant.address)
-            restaurants_list.append(restaurant)
-            restaurants_list.sort(key=lambda x: x.distance)
-        return restaurants_list
+        verbose_name_plural = 'заказы'#
     
     def __str__(self):
         return f'{self.firstname}, т. {self.phonenumber}'
