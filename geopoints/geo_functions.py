@@ -36,15 +36,15 @@ def fetch_coordinates(address):
         })
         response.raise_for_status()
     except requests.exceptions.ConnectionError:
-        logging.error('Ошибка содеинения при попытке связи с api yandex geocoder')
+        logging.error('Ошибка содеинения при попытке связи с yandex geocoder')
     except requests.exceptions.HTTPError(403):
-        logging.error('Проверьте токен доступа к api yandex geocoder')
+        logging.error('Проверьте токен доступа к yandex geocoder')
     except requests.exceptions.TooManyRedirects:
-        logging.error('Превышено количество запросов к api yandex geocoder')
+        logging.error('Превышено количество запросов к yandex geocoder')
     except requests.exceptions.ReadTimeout:
-        logging.error('Превышено время ожидания ответа api yandex geocoder')
+        logging.error('Превышено время ожидания ответа yandex geocoder')
     except requests.exceptions.Timeout:
-        logging.error('Превышено время ожидания ответа api yandex geocoder')
+        logging.error('Превышено время ожидания ответа yandex geocoder')
     found_places = response.json()
     ['response']
     ['GeoObjectCollection']
@@ -64,7 +64,9 @@ def find_nearest_restaurant(order):
 
     for restaurant in order.get_restaurants():
         restaurant_coordinates = fetch_coordinates(restaurant.address)
-        restraunt_distance = distance.distance(order_coordinates, restaurant_coordinates).km
+        restraunt_distance = distance.distance(
+            order_coordinates, restaurant_coordinates
+            ).km
         restaurants_and_distances[restraunt_distance] = restaurant
 
     min_distance = min(restaurants_and_distances.keys())
