@@ -7,7 +7,6 @@ import requests
 from geopoints.models import GeoPoint
 
 
-
 logging.basicConfig(
     filename='geocoder.log',
     filemode='a',
@@ -31,9 +30,9 @@ def fetch_coordinates(address):
     base_url = "https://geocode-maps.yandex.ru/1.x"
     try:
         response = requests.get(base_url, params={
-        "geocode": f"Moscow {address}",
-        "apikey": apikey,
-        "format": "json",
+            "geocode": f"Moscow {address}",
+            "apikey": apikey,
+            "format": "json",
         })
         response.raise_for_status()
     except requests.exceptions.ConnectionError:
@@ -46,7 +45,10 @@ def fetch_coordinates(address):
         logging.error('Превышено время ожидания ответа api yandex geocoder')
     except requests.exceptions.Timeout:
         logging.error('Превышено время ожидания ответа api yandex geocoder')
-    found_places = response.json()['response']['GeoObjectCollection']['featureMember']
+    found_places = response.json()
+    ['response']
+    ['GeoObjectCollection']
+    ['featureMember']
 
     if not found_places:
         return None
@@ -69,26 +71,29 @@ def find_nearest_restaurant(order):
     return restaurants_and_distances[min_distance]
 
 
-def get_order_restaurant_distance(order, restaurant, geopoints):
-    order_geopoint = geopoints.get(order.address)
-    if not order_geopoint:
-        order_coordinates = fetch_coordinates(order.address)
-        order_geopoint = GeoPoint.objects.create(
-            lng = order_coordinates[0],
-            lat = order_coordinates[1],
-            address = order.address,
-        )
-        order_geopoint.save()
+def get_geopoint(address, geopoints):
+    geopoint = geopoints.get(address)
+    if not geopoint:
+        try:
+            coordinates = fetch_coordinates(address)
+            geopoint = GeoPoint.objects.create(
+                lng=coordinates[0],
+                lat=coordinates[1],
+                address=address,
+            )
+            geopoint.save()
+        except Exception as e:
+            print(f"Ошибка получения координат для адреса {address}: {e}")
+            return None
+    return geopoint
 
-    restaurant_geopoint = geopoints.get(restaurant.address)
-    if restaurant_geopoint is None:
-        restaurant_coordinates = fetch_coordinates(restaurant.address)
-        restaurant_geopoint = GeoPoint.objects.create(
-            lng = restaurant_coordinates[0],
-            lat = restaurant_coordinates[1],
-            address = restaurant.address,
-        )
-        restaurant_geopoint.save()
+
+def get_order_restaurant_distance(order, restaurant, geopoints):
+    order_geopoint = get_geopoint(order.address, geopoints)
+    restaurant_geopoint = get_geopoint(restaurant.address, geopoints)
+
+    if order_geopoint is None or restaurant_geopoint is None:
+        return "Не удалось получить координаты для одного из адресов."
 
     order_restaurant_distance = distance.distance(
         (order_geopoint.lng, order_geopoint.lat),

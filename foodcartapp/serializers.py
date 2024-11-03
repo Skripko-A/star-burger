@@ -34,7 +34,6 @@ class OrderSerializer(serializers.ModelSerializer):
         )
 
         products_from_request = validated_data.pop('products')
-        restaurant_ids = None
 
         for product_data in products_from_request:
             product = product_data['product']
@@ -48,8 +47,15 @@ class OrderSerializer(serializers.ModelSerializer):
                 price=price
             )
 
-            menu_items = RestaurantMenuItem.objects.filter(product=product).values('restaurant_id')
-            current_restaurant_ids = set(menu_item['restaurant_id'] for menu_item in menu_items)
+            restaurant_ids = None
+            menu_items = RestaurantMenuItem.objects.filter(
+                product=product
+                ).values(
+                    'restaurant_id'
+                    )
+            current_restaurant_ids = set(
+                menu_item['restaurant_id'] for menu_item in menu_items
+                )
 
             if restaurant_ids is None:
                 restaurant_ids = current_restaurant_ids
@@ -59,9 +65,12 @@ class OrderSerializer(serializers.ModelSerializer):
         for restaurant_id in restaurant_ids:
             new_order.restaurants.add(Restaurant.objects.get(id=restaurant_id))
 
-        geopoints = {geopoint.address: geopoint for geopoint in GeoPoint.objects.all()}
+        geopoints = {geopoint.address: geopoint
+                     for geopoint in GeoPoint.objects.all()}
 
         for restaurant in new_order.restaurants:
-            restaurant.distance = get_order_restaurant_distance(new_order, restaurant, geopoints)
+            restaurant.distance = get_order_restaurant_distance(
+                new_order, restaurant, geopoints
+                )
 
         return new_order
