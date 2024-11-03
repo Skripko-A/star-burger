@@ -68,7 +68,7 @@ class OrderSerializer(serializers.ModelSerializer):
         geopoints = {geopoint.address: geopoint
                      for geopoint in GeoPoint.objects.all()}
 
-        for restaurant in new_order.restaurants:
+        for restaurant in new_order.restaurants.all():
             restaurant.distance = get_order_restaurant_distance(
                 new_order, restaurant, geopoints
                 )
