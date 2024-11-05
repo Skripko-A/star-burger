@@ -6,3 +6,11 @@ environs[django]~=11.0.0
 django-phonenumber-field~=8.0.0
 
 djangorestframework~=3.15.2
+
+phonenumberslite==8.13.40
+
+geopy==2.4.1
+
+requests==2.32.3
+
+rollbar==1.0.0
