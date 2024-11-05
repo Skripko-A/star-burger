@@ -1,13 +1,13 @@
-from django.db import IntegrityError, transaction
-from django.http import JsonResponse
+from django.db import transaction
+from django.http import JsonResponse, HttpResponse
 from django.templatetags.static import static
 from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Product, Order, OrderProduct
-from .serializers import OrderSerializer, OrderProductSerializer
+from .models import Product
+from .serializers import OrderSerializer
 
 
 def banners_list_api(request):
@@ -77,6 +77,5 @@ def register_order(request):
     order_serializer = OrderSerializer(data=request.data)
     order_serializer.is_valid(raise_exception=True)
     order_serializer.save()
-
 
     return Response(order_serializer.data, status=201)
