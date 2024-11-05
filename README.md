@@ -54,10 +54,26 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-Определите переменную окружения `SECRET_KEY`. Создать файл `.env` в каталоге `star_burger/` и положите туда такой код:
+Определите переменные окружения. Создать файл `.env` в каталоге `star_burger/` и заполните значения переменных:
 ```sh
-SECRET_KEY=django-insecure-0if40nf4nf93n4
+SECRET_KEY=ваш ключ проекта # можно всопользоваться генератором https://djecrety.ir/
+YANDEX_GEOCODER_API_KEY=ваш токен доступа yandex geocoder
+DEBUG=True #  на проде должно быть False
+ROLLBAR_TOKEN=ваш токен доступа rollbar
 ```
+Подключите проект к rollbar:
+- Зарегистрируйтесь на сайте https://rollbar.com/discover/
+- Создайте на сайте джанго проект
+- Свяжите вашу копию сайта бургеров с проектом в rollbar
+```bash
+python3 manage.py shell
+```
+```python3
+import rollbar
+rollbar.init('rollbaraccesstoken') # вставьте ваш access token rollbar
+rollbar.report_message('PrevedMedved')
+```
+ - Убедитесь что на странице rollbar вкладке items отключены фильтра, выбран ваш проект и появилось сообщение #PrevedMedved
 
 Создайте файл базы данных SQLite и отмигрируйте её следующей командой:
 
