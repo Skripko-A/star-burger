@@ -81,6 +81,57 @@ rollbar.report_message('PrevedMedved')
 python manage.py migrate
 ```
 
+## Если вы хотите PostgreSQL.
+```bash
+sudo apt install postgresql postgresql-contrib # установить PostgreSQL
+sudo su - postgres
+psql # начинаем сессию  Postgres
+create database mydb; # запомните название бдэшечки
+create user mydb_admin with password 'password'; # запомните юзера и его пароль
+alter role mydb_admin set client_encoding to 'utf8'; # выбираем кодировку для джанго
+alter role mydb_admin set default_transaction_isolation to 'read committed'; # блокируем чтение незафиксированных транзакций
+alter role mydb_admin set timezone to 'UTC'; # часовой пояс в соответствии с джанго
+grant all privileges on database mydb to mydb_admin; # если у вас PostgreSQL до 15 версии
+\connect mydb; # если у вас PostgreSQL 15+
+create schema myschema authorization mydb_admin; # запомните название схемы
+```
+Для переноса данных из базы sqlite:
+```bash
+python3 manage.py dumpdata --exclude contenttypes > db_dump.json  
+# копируем данные из БД, на которую сейчас настроен ваш джанго проект
+```
+Изменяем запись DATABASES в вашем settings.py:
+```py
+DATABASES = {
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    ),
+}
+# Добавьте схему если у вас Postgres 15 + версии
+DATABASES['default']['OPTIONS'] = {
+    'options': '-c search_path=myschema'
+}
+```
+Теперь в `.env` запишем главные параметры БД Postgres:
+```sh
+DATABASE_URL=postgresql://mydb_admin:password@localhost:port/mydb
+# помните когда вы создавали свою БД я просил вас запоминать название БД, юзера, пароль?
+# порт нужно указывать тот, который установлен в конфигурациях самого Postgres
+```
+```bash
+# давайте взглянем что там указано
+grep -i '^port' /etc/postgresql/16/main/postgresql.conf
+# port = 5432                             # (change requires restart)
+# укажите этот порт в .env DATABASE_URL
+```
+После сохранения файла настроек ваш джанго проект переключиться на новую пустую БД. Надо построить в ней таблицы и заполнить их скопированными из старой БД данными:
+```bash
+python3 manage.py migrate
+python3 manage.py loaddata dump.json
+```
+
 Запустите сервер:
 
 ```sh
