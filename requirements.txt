@@ -1,6 +1,8 @@
 django~=5.1
+
 django-debug-toolbar~=4.4.6
 Pillow
+
 environs[django]~=11.0.0
 
 django-phonenumber-field~=8.0.0
@@ -14,3 +16,7 @@ geopy==2.4.1
 requests==2.32.3
 
 rollbar==1.0.0
+
+psycopg2==2.9.10
+
+python-decouple==3.8
