@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.shortcuts import reverse
@@ -119,17 +120,31 @@ class OrderProductInline(admin.TabularInline):
     extra = 0
 
 
+class OrderAdminForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['restaurant'].queryset = self.instance.restaurants.all()
+
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ( 'firstname', 'lastname', 'phonenumber', 'address')
+    list_display = ('firstname', 'lastname', 'phonenumber', 'address')
     readonly_fields = ('created_at',)
     inlines = (OrderProductInline,)
+    form = OrderAdminForm
 
     def response_post_save_change(self, request, obj):
         res = super().response_post_save_change(request, obj)
         next_url = request.GET.get('next')
 
-        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+        if next_url and url_has_allowed_host_and_scheme(
+            next_url, 
+            allowed_hosts=settings.ALLOWED_HOSTS
+        ):
             return HttpResponseRedirect(next_url)
         else:
             return res
