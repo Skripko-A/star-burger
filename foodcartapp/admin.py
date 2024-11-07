@@ -7,7 +7,12 @@ from django.utils.http import url_has_allowed_host_and_scheme
 
 from star_burger import settings
 
-from .models import Product, Order, OrderProduct, ProductCategory, Restaurant, RestaurantMenuItem
+from .models import (Product,
+                     Order,
+                     OrderProduct,
+                     ProductCategory,
+                     Restaurant,
+                     RestaurantMenuItem)
 
 
 class RestaurantMenuItemInline(admin.TabularInline):
