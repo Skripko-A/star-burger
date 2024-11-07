@@ -14,13 +14,6 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-
-logging.debug('Это отладочное сообщение')
-logging.info('Это информационное сообщение')
-logging.warning('Это предупреждающее сообщение')
-logging.error('Это сообщение об ошибке')
-logging.critical('Это критическое сообщение')
-
 env = Env()
 env.read_env()
 
