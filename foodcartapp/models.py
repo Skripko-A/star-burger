@@ -225,12 +225,10 @@ class Order(models.Model):
 
     objects = OrderQuerySet.as_manager()
 
-
-
     class Meta:
         verbose_name = 'заказ'
-        verbose_name_plural = 'заказы'#
-    
+        verbose_name_plural = 'заказы'
+
     def __str__(self):
         return f'{self.firstname}, т. {self.phonenumber}'
 
