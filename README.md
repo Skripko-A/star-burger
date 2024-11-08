@@ -31,12 +31,12 @@
 
 ### Настройте переменные окружения
 ```env
-DEBUG=True
+DEBUG=True # False н апроде
 ALLOWED_HOSTS=127.0.0.1,любой другой хостнейм или айпи сайта
 SECRET_KEY=ваш ключ проекта джанго
 
-YANDEX_GEOCODER_API_KEY=ваш ключ геокодера яндекса
-ROLLBAR_TOKEN=ваш 
+YANDEX_GEOCODER_API_KEY=ваш токен геокодера яндекса
+ROLLBAR_TOKEN=ваш токен rollbar
 
 DB_SCHEMA=-c search_path=myschema
 DATABASE_URL=postgresql://psql-user:password@host:port/databasename # подробнее ниже
@@ -77,6 +77,7 @@ git clone https://github.com/Skripko-A/star-burger
 cd star-burger
 python3 -m venv .venv
 source .venv/bin/activate
+pip3 install --upgrade pip
 pip3 install -r requirements.txt
 python3 manage.py migrate
 python3 manage.py runserver
@@ -87,5 +88,4 @@ sudo apt install nodejs
 npm ci --dev
 ./node_modules/.bin/parcel watch bundles-src/index.js --dist-dir bundles --public-url="./" # может быть нестерпимо долго но вы держитесь до конца
 ```
-Идём на [~~первый тост за локалхост~~](http://127.0.0.1:8000/) 
-и смотрим всё ли запустилось
+[~~Первый тост за локалхост~~](http://127.0.0.1:8000/)  
