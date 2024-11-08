@@ -93,7 +93,7 @@ DATABASES = {
 }
 
 DATABASES['default']['OPTIONS'] = {
-    'options': '-c search_path=star_burger_db_schema'
+    'options': env("DB_SCHEMA")
 }
 
 AUTH_PASSWORD_VALIDATORS = [
