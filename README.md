@@ -31,12 +31,15 @@
 
 ### Настройте переменные окружения
 ```env
-SECRET_KEY=ваш ключ проекта джанго
-YANDEX_GEOCODER_API_KEY=ваш ключ геокодера яндекса
 DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,любой другой хостнейм или айпи сайта
+SECRET_KEY=ваш ключ проекта джанго
+
+YANDEX_GEOCODER_API_KEY=ваш ключ геокодера яндекса
 ROLLBAR_TOKEN=ваш 
+
+DB_SCHEMA=-c search_path=myschema
 DATABASE_URL=postgresql://psql-user:password@host:port/databasename # подробнее ниже
-ALLOWED_HOSTS=127.0.0.1
 ```
 DATABASE URL нам понадобится если вы хотите себе PostgreSQL.  
 Теперь о том, как его сделать (в смысле постгрес):
@@ -54,7 +57,7 @@ CREATE SCHEMA myschema AUTHORIZATION myuser;
 ALTER ROLE myuser SET client_encoding TO 'utf8';
 ALTER ROLE myuser SET default_transaction_isolation TO 'read committed';
 ALTER ROLE myuser SET timezone TO 'UTC';
-# Запомните или запишите имя базы данных, пользователя и пароль, 
+# Запомните или запишите имя базы данных, пользователя, пароль и схему 
 # вот их вы и занесете в .env DATABASE_URL
 ```
 Если захотите сохранить и/или перенести данные из бэдэшечки то есть вот что:
