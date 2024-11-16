@@ -204,6 +204,8 @@ OnUnitActiveSec=1w
 [Install]
 WantedBy=multi-user.target
 ```
+Очистка устаревших пользовательских сессий
+
 `clearsessions - 
 Django does not provide automatic purging of expired sessions. Therefore, it’s your job to purge expired sessions on a regular basis. Django provides a clean-up management command for this purpose: clearsessions. It’s recommended to call this command on a regular basis, for example as a daily cron job.`  
 Офф дока советует пихнуть его в `cron`. Так и сделаем:
