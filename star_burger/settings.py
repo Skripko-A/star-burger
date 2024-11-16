@@ -41,7 +41,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
-    "rollbar.contrib.django.middleware.RollbarNotifierMiddleware",
 ]
 
 ROOT_URLCONF = "star_burger.urls"
@@ -85,16 +84,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default=config('DATABASE_URL'),
-        conn_max_age=600,
-        ssl_require=True
+    "default": dj_database_url.config(
+        default=config("DATABASE_URL"), conn_max_age=600, ssl_require=True
     ),
 }
 
-DATABASES['default']['OPTIONS'] = {
-    'options': env("DB_SCHEMA")
-}
+DATABASES["default"]["OPTIONS"] = {"options": env("DB_SCHEMA")}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -125,15 +120,25 @@ STATIC_URL = "/static/"
 
 INTERNAL_IPS = ["127.0.0.1"]
 
-
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "assets"),
     os.path.join(BASE_DIR, "bundles"),
 ]
 
-ROLLBAR = {
-    "access_token": env("ROLLBAR_TOKEN"),
-    "environment": "development",
-    "code_version": "1.0",
-    "root": BASE_DIR,
-}
+REST_FRAMEWORK = {}
+
+if env("ENVIRONMENT") == "production":
+    MIDDLEWARE.append[
+        "rollbar.contrib.django.middleware.RollbarNotifierMiddleware"
+    ]
+
+    REST_FRAMEWORK["EXCEPTION_HANDLER"] = (
+        "rollbar.contrib.django_rest_framework.post_exception_handler"
+    )
+
+    ROLLBAR = {
+        "access_token": env("ROLLBAR_TOKEN"),
+        "environment": "development",
+        "code_version": "1.0",
+        "root": BASE_DIR,
+    }
