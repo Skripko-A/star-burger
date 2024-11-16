@@ -20,13 +20,13 @@ echo "Building JS with Parcel..."
 ./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
 
 echo "Collecting static files..."
-.venv/bin/python3 manage.py collectstatic
+.venv/bin/python3 manage.py collectstatic --noinput
 
 echo "Running migrations..."
 .venv/bin/python3 manage.py migrate
 
 echo "Reloading services..."
-for service in nginx.service postgresql@17-main.service star-burger.service; do
+for service in postgresql@17-main.service star-burger.service; do
         sudo systemctl reload $service
 done
 
@@ -38,5 +38,7 @@ curl -H "Accept: application/json" \
 -H "Content-Type: application/json" \
 -X POST 'https://api.rollbar.com/api/1/deploy' \
 -d '{"environment": "production", "revision": "'"$REVISION"'", "rollbar_name": "aleksandr", "local_username": "a-skripko", "status": "succeeded"}'
+
+git commit -m "Deploy $REVISION"
 
 echo "Deploy $REVISION is finished successfully"
