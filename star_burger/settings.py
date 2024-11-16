@@ -128,9 +128,9 @@ STATICFILES_DIRS = [
 REST_FRAMEWORK = {}
 
 if env("ENVIRONMENT") == "production":
-    MIDDLEWARE.append[
+    MIDDLEWARE.append(
         "rollbar.contrib.django.middleware.RollbarNotifierMiddleware"
-    ]
+    )
 
     REST_FRAMEWORK["EXCEPTION_HANDLER"] = (
         "rollbar.contrib.django_rest_framework.post_exception_handler"
