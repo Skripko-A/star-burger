@@ -30,6 +30,8 @@ for service in nginx.service postgresql@17-main.service star-burger.service; do
         sudo systemctl reload $service
 done
 
+git commit -m "Deploy $REVISION"
+
 echo "Notify rollbar about deploy"
 REVISION=$(git rev-parse --short HEAD)
 ROLLBAR_TOKEN=$(cat .env | grep ROLLBAR_TOKEN | cut -d "=" -f 2)
@@ -38,7 +40,5 @@ curl -H "Accept: application/json" \
 -H "Content-Type: application/json" \
 -X POST 'https://api.rollbar.com/api/1/deploy' \
 -d '{"environment": "production", "revision": "'"$REVISION"'", "rollbar_name": "aleksandr", "local_username": "a-skripko", "status": "succeeded"}'
-
-git commit -m "Deploy $REVISION"
 
 echo "Deploy $REVISION is finished successfully"
