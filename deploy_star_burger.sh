@@ -26,7 +26,7 @@ echo "Running migrations..."
 .venv/bin/python3 manage.py migrate
 
 echo "Reloading services..."
-for service in postgresql@17-main.service star-burger.service; do
+for service in nginx.service postgresql@17-main.service star-burger.service; do
         sudo systemctl reload $service
 done
 
