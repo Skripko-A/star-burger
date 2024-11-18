@@ -145,3 +145,4 @@ cython_debug/
 star-burger-products-master/products.json
 star-burger-products-master/restaurants.json
 staticfiles/
+package-locj.json
